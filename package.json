@@ -1,0 +1,25 @@
+{
+  "name": "@adminforth/image-generation-adapter-openai",
+  "version": "1.0.9",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && npm version patch",
+    "rollout": "npm run build && npm publish --access public"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.9.0",
+    "file-type": "^20.5.0",
+    "form-data": "^4.0.5",
+    "typescript": "^5.8.3"
+  },
+  "peerDependencies": {
+    "adminforth": "^2.24.0"
+  }
+}
