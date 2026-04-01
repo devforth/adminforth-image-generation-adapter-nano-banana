@@ -8,7 +8,7 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
 
   constructor(options: AdapterOptions) {
     this.options = options;
-    this.options.model = options.model || 'imagen-3';
+    this.options.model = options.model || 'gemini-3.1-flash-image-preview';
     this.genAI = new GoogleGenerativeAI(this.options.nanoBananaApiKey);
   }
 
@@ -40,6 +40,7 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
     n?: number;
   }): Promise<{ imageURLs?: string[]; error?: string; }> {
     try {
+
       const model = this.genAI.getGenerativeModel({ model: this.options.model });
 
       const result = await model.generateContent({
