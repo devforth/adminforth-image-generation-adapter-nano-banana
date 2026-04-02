@@ -28,6 +28,18 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
     return ['png', 'jpg', 'jpeg'];
   }
 
+  private async urlToGenerativePart(url: string) {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    const contentType = response.headers.get("content-type") || "image/jpeg";
+    return {
+      inlineData: {
+        data: Buffer.from(buffer).toString("base64"),
+        mimeType: contentType,
+      },
+    };
+  }
+
   async generate({
     prompt,
     inputFiles,
@@ -43,10 +55,17 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
 
       const model = this.genAI.getGenerativeModel({ model: this.options.model });
 
+      const imageParts = await Promise.all(
+        inputFiles.map(url => this.urlToGenerativePart(url))
+      );
+
       const result = await model.generateContent({
         contents: [{
           role: 'user',
-          parts: [{ text: prompt }]
+          parts: [
+            ...imageParts,
+            { text: `Based on the provided image(s), generate a new image: ${prompt}` } 
+          ]
         }],
         generationConfig: {
           candidateCount: n,
@@ -59,6 +78,11 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
         const part = c.content.parts.find(p => p.inlineData);
         return part ? `data:${part.inlineData.mimeType};base64,${part.inlineData.data}` : null;
       }).filter(Boolean) as string[];
+
+      if (images.length === 0) {
+        const textResponse = response.text();
+        return { error: `Model returned text instead of image: ${textResponse}` };
+      }
 
       return { imageURLs: images };
 
