@@ -45,12 +45,14 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
     inputFiles,
     n = 1,
     size = '1024x1024',
+    extraParams = {}
   }: {
     prompt: string;
     inputFiles: string[];
     size?: string;
     n?: number;
-  }): Promise<{ imageURLs?: string[]; error?: string; }> {
+    extraParams?: Record<string, any>;
+  }): Promise<{ imageURLs?: string[]; error?: string }> {
     try {
 
       const model = this.genAI.getGenerativeModel({ model: this.options.model });
@@ -59,21 +61,24 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
         inputFiles.map(url => this.urlToGenerativePart(url))
       );
 
+      const contents = [{
+        role: 'user',
+        parts: [
+          ...imageParts,
+          { text: `Generate a new image based on the provided images: ${prompt}` }
+        ]
+      }];
+
+      const generationConfig: any = { candidateCount: n };
+      if (extraParams) Object.assign(generationConfig, extraParams);
+
       const result = await model.generateContent({
-        contents: [{
-          role: 'user',
-          parts: [
-            ...imageParts,
-            { text: `Based on the provided image(s), generate a new image: ${prompt}` } 
-          ]
-        }],
-        generationConfig: {
-          candidateCount: n,
-        }
+        contents,
+        generationConfig
       });
 
       const response = await result.response;
-      
+
       const images = response.candidates?.map(c => {
         const part = c.content.parts.find(p => p.inlineData);
         return part ? `data:${part.inlineData.mimeType};base64,${part.inlineData.data}` : null;
