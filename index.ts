@@ -18,7 +18,9 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
     }
   }
 
-  outputImagesMaxCountSupported(): number { return 4; }
+  outputImagesMaxCountSupported(): number {
+    return 4;
+  }
 
   outputDimensionsSupported(): string[] {
     return ['1024x1024', '1440x1024', '1024x1440'];
@@ -38,6 +40,30 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
         mimeType: contentType,
       },
     };
+  }
+
+  private mapSizeToImageConfig(size: string) {
+    const [width, height] = size.split('x').map(Number);
+
+    const knownRatios: Record<string, string> = {
+      '1:1': '1:1', '16:9': '16:9', '9:16': '9:16',
+      '4:3': '4:3', '3:4': '3:4', '3:2': '3:2', '2:3': '2:3',
+      '21:9': '21:9', '4:1': '4:1', '8:1': '8:1'
+    };
+    const ratioKey = Object.keys(knownRatios).find(k => {
+      const [rw, rh] = k.split(':').map(Number);
+      return Math.abs(rw / rh - width / height) < 0.05; 
+    });
+    const aspectRatio = ratioKey ? knownRatios[ratioKey] : '1:1';
+ 
+    const maxDim = Math.max(width, height);
+    let imageSize = '1K';
+    if (maxDim <= 1024) imageSize = '1K';
+    else if (maxDim <= 2048) imageSize = '2K';
+    else if (maxDim <= 4096) imageSize = '4K';
+    else imageSize = '4K';
+
+    return { aspectRatio, imageSize };
   }
 
   async generate({
@@ -69,7 +95,14 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
         ]
       }];
 
-      const generationConfig: any = { candidateCount: n };
+      const { aspectRatio, imageSize } = this.mapSizeToImageConfig(size);
+
+      const generationConfig: any = {
+        candidateCount: n,
+        imageConfig: { aspectRatio, imageSize },
+        responseModalities: ['Image'],
+      };
+
       if (extraParams) Object.assign(generationConfig, extraParams);
 
       const result = await model.generateContent({
