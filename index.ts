@@ -77,15 +77,13 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
         generationConfig
       });
 
-      const response = await result.response;
-
-      const images = response.candidates?.map(c => {
+      const images = result.response.candidates?.map(c => {
         const part = c.content.parts.find(p => p.inlineData);
         return part ? `data:${part.inlineData.mimeType};base64,${part.inlineData.data}` : null;
       }).filter(Boolean) as string[];
 
       if (images.length === 0) {
-        const textResponse = response.text();
+        const textResponse = result.response.text();
         return { error: `Model returned text instead of image: ${textResponse}` };
       }
 
