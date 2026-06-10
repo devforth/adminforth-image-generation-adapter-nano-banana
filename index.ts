@@ -11,7 +11,7 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
     this.options.model = options.model || 'gemini-3.1-flash-image-preview';
     this.genAI = new GoogleGenerativeAI(this.options.nanoBananaApiKey);
   }
-
+ 
   validate(): void {
     if (!this.options.nanoBananaApiKey) {
       throw new Error("Nano Banana (Google) API Key is required");
