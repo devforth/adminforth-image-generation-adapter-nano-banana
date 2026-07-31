@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AdapterOptions } from "./types.js";
 import type { ImageGenerationAdapter } from "adminforth";
-import { checkIfLinkInAllowedHosts } from "adminforth";
+import { afLogger, checkIfLinkInAllowedHosts } from "adminforth";
 
 export default class ImageGenerationAdapterNanoBanana implements ImageGenerationAdapter {
   options: AdapterOptions;
@@ -11,6 +11,9 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
     this.options = options;
     this.options.model = options.model || 'gemini-3.1-flash-image-preview';
     this.genAI = new GoogleGenerativeAI(this.options.nanoBananaApiKey);
+    if (!this.options.attachImagesAllowedHosts) {
+      afLogger.warn('No attachImagesAllowedHosts specified, images will be downloaded from any host. This may be a security risk.');
+    }
   }
  
   validate(): void {
