@@ -56,6 +56,9 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
   private async urlToGenerativePart(url: string) {
     this.assertHostAllowed(url);
     const response = await fetch(url);
+    if (response.status >= 300 && response.status < 400) {
+      throw new Error(`Failed to fetch image from URL: ${url}, status: ${response.status}. Redirects are not allwed.`);
+    }
     const buffer = await response.arrayBuffer();
     const contentType = response.headers.get("content-type") || "image/jpeg";
     return {
