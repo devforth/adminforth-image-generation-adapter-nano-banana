@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import type { AdapterOptions } from "./types.js";
 import type { ImageGenerationAdapter } from "adminforth";
+import { checkIfLinkInAllowedHosts } from "adminforth";
 
 export default class ImageGenerationAdapterNanoBanana implements ImageGenerationAdapter {
   options: AdapterOptions;
@@ -30,31 +31,8 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
     return ['png', 'jpg', 'jpeg'];
   }
 
-  private assertHostAllowed(url: string): void {
-    const allowedHosts = this.options.attachImagesAllowedHosts;
-    if (!allowedHosts?.length) {
-      return;
-    }
-    let hostname: string;
-    try {
-      hostname = new URL(url).hostname.toLowerCase().replace(/\.$/, '');
-    } catch {
-      throw new Error(`Invalid attachment URL: ${url}`);
-    }
-    const allowed = allowedHosts.some((raw) => {
-      const entry = (raw || '').trim().toLowerCase().replace(/^\*/, '').replace(/\.$/, '');
-      if (!entry) {
-        return false;
-      }
-      return entry.startsWith('.') ? (hostname === entry.slice(1) || hostname.endsWith(entry)) : hostname === entry;
-    });
-    if (!allowed) {
-      throw new Error(`Attachment host "${hostname}" is not in attachImagesAllowedHosts`);
-    }
-  }
-
   private async urlToGenerativePart(url: string) {
-    this.assertHostAllowed(url);
+    checkIfLinkInAllowedHosts(url, this.options.attachImagesAllowedHosts);
     const response = await fetch(url);
     if (response.status >= 300 && response.status < 400) {
       throw new Error(`Failed to fetch image from URL: ${url}, status: ${response.status}. Redirects are not allwed.`);
