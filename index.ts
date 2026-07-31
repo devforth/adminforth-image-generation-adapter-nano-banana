@@ -30,7 +30,31 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
     return ['png', 'jpg', 'jpeg'];
   }
 
+  private assertHostAllowed(url: string): void {
+    const allowedHosts = this.options.attachImagesAllowedHosts;
+    if (!allowedHosts?.length) {
+      return;
+    }
+    let hostname: string;
+    try {
+      hostname = new URL(url).hostname.toLowerCase().replace(/\.$/, '');
+    } catch {
+      throw new Error(`Invalid attachment URL: ${url}`);
+    }
+    const allowed = allowedHosts.some((raw) => {
+      const entry = (raw || '').trim().toLowerCase().replace(/^\*/, '').replace(/\.$/, '');
+      if (!entry) {
+        return false;
+      }
+      return entry.startsWith('.') ? (hostname === entry.slice(1) || hostname.endsWith(entry)) : hostname === entry;
+    });
+    if (!allowed) {
+      throw new Error(`Attachment host "${hostname}" is not in attachImagesAllowedHosts`);
+    }
+  }
+
   private async urlToGenerativePart(url: string) {
+    this.assertHostAllowed(url);
     const response = await fetch(url);
     const buffer = await response.arrayBuffer();
     const contentType = response.headers.get("content-type") || "image/jpeg";
