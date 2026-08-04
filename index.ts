@@ -6,13 +6,15 @@ import { afLogger, checkIfLinkInAllowedHosts } from "adminforth";
 export default class ImageGenerationAdapterNanoBanana implements ImageGenerationAdapter {
   options: AdapterOptions;
   private genAI: GoogleGenerativeAI;
+  private static allowedHostsWarningShown = false;
 
   constructor(options: AdapterOptions) {
     this.options = options;
     this.options.model = options.model || 'gemini-3.1-flash-image-preview';
     this.genAI = new GoogleGenerativeAI(this.options.nanoBananaApiKey);
-    if (!this.options.attachImagesAllowedHosts) {
-      afLogger.warn('No attachImagesAllowedHosts specified, images will be downloaded from any host. This may be a security risk.');
+    if (!this.options.attachImagesAllowedHosts && !ImageGenerationAdapterNanoBanana.allowedHostsWarningShown) {
+      ImageGenerationAdapterNanoBanana.allowedHostsWarningShown = true;
+      afLogger.warn('Nano Banana Image generation adapter: No attachImagesAllowedHosts specified, images will be downloaded from any host. This may be a security risk.');
     }
   }
  
