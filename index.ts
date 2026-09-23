@@ -38,7 +38,9 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
 
   private async urlToGenerativePart(url: string) {
     checkIfLinkInAllowedHosts(url, this.options.attachImagesAllowedHosts);
-    const response = await fetch(url);
+    const response = await fetch(url, {    
+      redirect: 'manual'
+    });
     if (response.status >= 300 && response.status < 400) {
       throw new Error(`Failed to fetch image from URL: ${url}, status: ${response.status}. Redirects are not allwed.`);
     }
