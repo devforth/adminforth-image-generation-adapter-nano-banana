@@ -10,7 +10,7 @@ export default class ImageGenerationAdapterNanoBanana implements ImageGeneration
 
   constructor(options: AdapterOptions) {
     this.options = options;
-    this.options.model = options.model || 'gemini-3.1-flash-image-preview';
+    this.options.model = options.model || 'gemini-nano-banana-2.1';
     this.genAI = new GoogleGenerativeAI(this.options.nanoBananaApiKey);
     if (!this.options.attachImagesAllowedHosts && !ImageGenerationAdapterNanoBanana.allowedHostsWarningShown) {
       ImageGenerationAdapterNanoBanana.allowedHostsWarningShown = true;
